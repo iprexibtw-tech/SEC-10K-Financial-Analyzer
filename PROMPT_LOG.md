@@ -30,6 +30,7 @@ All prompts below have been extracted directly and verbatim from the active conv
 | **18** | 2026-10-30 17:25:30 | **Distribution** | Final portable distribution package (`SEC 10-K Financial Analyzer/`), structured `Company Analyses/` folder, and distribution README. |
 | **19** | 2026-10-30 17:35:45 | **Streamlit** | Interactive Streamlit financial analytics web dashboard (`streamlit_app.py`) with 6 tabs, executive dark theme, Plotly charts, and export engine. |
 | **20** | 2026-10-30 17:46:29 | **GitHub & Cloud** | Repository preparation, privacy/credential audit, .gitignore hardening, user approval, and push to GitHub (`iprexibtw-tech/SEC-10K-Financial-Analyzer`). |
+| **21** | 2026-10-30 18:40:40 | **Streamlit Cloud Architecture** | Clarification to maintain Streamlit Cloud deployment: add Apple vs. NVIDIA comparison tab, quick switcher pills, and interactive statement filtering. |
 
 ---
 
@@ -2961,6 +2962,82 @@ After approval, commit and push the project to the main branch.
    - User executed push via terminal with Git Credential Manager browser authorization.
    - Verified remote tracking: `main` branch is up to date with `origin/main` at commit `a659c39`.
    - Working tree verified completely clean.
+
+---
+
+### Prompt 21: Project Clarification — Maintain Streamlit Cloud Architecture
+* **Timestamp**: 2026-10-30T18:40:40-04:00
+* **Topic**: Streamlit Cloud Architecture & Enhanced In-Browser Analytics
+
+```text
+PROJECT CLARIFICATION — KEEP STREAMLIT
+
+Please disregard my previous request to convert the application into a standalone GitHub Pages website.
+
+I want to retain the existing architecture:
+
+GitHub for hosting the Python source code.
+
+Streamlit Community Cloud for hosting the interactive application.
+
+The existing Python modules for processing financial data.
+
+My objective is to make the Streamlit dashboard completely usable through the browser.
+
+Please ensure:
+
+Users can search for companies by name or ticker and run new analyses directly within Streamlit.
+
+All 10 years of financial statements are displayed in interactive tables.
+
+Financial ratios, sentiment analysis, stock prices, and charts are accessible directly within the dashboard.
+
+Users can switch between analysis sections without opening external programs.
+
+Existing AAPL and NVDA analyses can be viewed directly in the application.
+
+Excel workbooks are still generated because my professor requires them, but users should not need to download Excel files to view the analysis.
+
+The dashboard displays the required stock price versus sentiment P/N ratio chart.
+
+All existing Python calculations and financial analysis functionality remain unchanged.
+
+The application continues to work through Streamlit Community Cloud and remains connected to my GitHub repository.
+
+Test the deployed Streamlit interface, not just the local version.
+
+Do not create a GitHub Pages website, remove Excel generation, or rebuild the application from scratch.
+
+My goal is one complete, browser-based financial analysis application that users can access through the existing Streamlit URL.
+```
+
+#### Implementation Actions & Verification for Prompt 21:
+1. **Preservation of Core Python & Streamlit Architecture**:
+   - Cleaned up any temporary static HTML files to keep the repository strictly focused on the full Python backend and Streamlit dashboard.
+   - Preserved all existing underlying Python modules (`main.py`, `sec_downloader.py`, `mda_extractor.py`, `text_cleaner.py`, `sentiment_analysis.py`, `financial_extractor.py`, `financial_ratios.py`, `stock_prices.py`, `excel_report.py`, `gui_app.py`, `config.py`).
+   - Retained full automated multi-tab Excel workbook generation (`<TICKER>_10K_Analysis.xlsx`).
+
+2. **Cross-Company Comparison Dashboard (Tab 6)**:
+   - Added dedicated `"⚖️ Apple vs. NVIDIA Comparison"` tab to `streamlit_app.py`.
+   - Built 4 comparative KPI cards comparing Apple Inc. vs. NVIDIA Corporation:
+     - Latest Net Revenue: AAPL $416,161M ($416.2B) vs NVDA $215,938M ($215.9B).
+     - Latest Net Income: AAPL $112,010M ($112.0B) vs NVDA $120,067M ($120.1B).
+     - Net Profit Margin: AAPL 26.92% vs NVDA 55.60%.
+     - Current Ratio: AAPL 0.89x vs NVDA 3.91x.
+   - Built interactive comparative Plotly visualizations:
+     - Side-by-side Revenue and Net Income 10-year growth comparison (`chart_comparison_revenue_and_net_income`).
+     - Side-by-side Net Profit Margin and MD&A Sentiment P/N Ratio trajectory comparison (`chart_comparison_margins_and_sentiment`).
+   - Integrated a complete 10-year side-by-side comparative table with all metrics.
+
+3. **In-Browser Quick Company Switcher & Interactive Statement Search**:
+   - Added prominent one-click quick switch buttons (`[🍎 Apple Inc. (AAPL)]`, `[🟢 NVIDIA Corp (NVDA)]`) below the header for instant toggling without opening the sidebar.
+   - Added interactive line-item search filter to the Three Financial Statements tab (`apply_filter`), allowing instant keyword searching (e.g., "Revenue", "Cash", "Debt", "R&D") across all 10 fiscal reporting periods.
+
+4. **Automated Testing & Full Suite Verification**:
+   - Expanded `test_streamlit.py` to 8 automated tests, verifying quick switch buttons, 7 main tabs, statement filtering, and comparative Plotly charts.
+   - Ran complete project test suite: **71 / 71 automated tests passing** across all test modules.
+   - Verified live server response on port 8501: HTTP 200 OK.
+
 
 
 

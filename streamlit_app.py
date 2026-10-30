@@ -469,6 +469,143 @@ def chart_sentiment_breakdown(sentiment_df: pd.DataFrame, ticker: str) -> go.Fig
     return fig
 
 
+def chart_comparison_revenue_and_net_income(aapl_df: pd.DataFrame, nvda_df: pd.DataFrame) -> go.Figure:
+    """Generate comparative 10-year Revenue and Net Income chart for AAPL vs NVDA."""
+    fig = make_subplots(
+        rows=1,
+        cols=2,
+        subplot_titles=(
+            "10-Year Annual Net Revenue ($M)",
+            "10-Year Annual Net Income ($M)",
+        ),
+    )
+    labels = [
+        f"T-{10 - i} ({aapl_df.iloc[i]['fiscal_year']}/{nvda_df.iloc[i]['fiscal_year']})"
+        for i in range(min(len(aapl_df), len(nvda_df)))
+    ]
+
+    # Revenue subplots
+    fig.add_trace(
+        go.Bar(x=labels, y=aapl_df["net_revenue_usd_m"], name="Apple (AAPL) Revenue", marker_color="#38BDF8"),
+        row=1,
+        col=1,
+    )
+    fig.add_trace(
+        go.Bar(x=labels, y=nvda_df["net_revenue_usd_m"], name="NVIDIA (NVDA) Revenue", marker_color="#10B981"),
+        row=1,
+        col=1,
+    )
+
+    # Net Income subplots
+    fig.add_trace(
+        go.Bar(x=labels, y=aapl_df["net_income_usd_m"], name="Apple (AAPL) Net Income", marker_color="#60A5FA"),
+        row=1,
+        col=2,
+    )
+    fig.add_trace(
+        go.Bar(x=labels, y=nvda_df["net_income_usd_m"], name="NVIDIA (NVDA) Net Income", marker_color="#34D399"),
+        row=1,
+        col=2,
+    )
+
+    fig.update_layout(
+        template="plotly_dark",
+        barmode="group",
+        paper_bgcolor="rgba(15, 23, 42, 0.4)",
+        plot_bgcolor="rgba(15, 23, 42, 0.6)",
+        font=dict(family="Segoe UI, Inter, Arial", size=11, color="#E2E8F0"),
+        legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="right", x=1),
+        height=450,
+        margin=dict(l=50, r=40, t=80, b=40),
+    )
+    fig.update_yaxes(tickprefix="$", showgrid=True, gridcolor="#334155")
+    fig.update_xaxes(showgrid=True, gridcolor="#334155")
+    return fig
+
+
+def chart_comparison_margins_and_sentiment(
+    aapl_ratios: pd.DataFrame, nvda_ratios: pd.DataFrame, aapl_sent: pd.DataFrame, nvda_sent: pd.DataFrame
+) -> go.Figure:
+    """Generate comparative Net Margin % and Sentiment P/N Ratio trends for AAPL vs NVDA."""
+    fig = make_subplots(
+        rows=1,
+        cols=2,
+        subplot_titles=(
+            "Net Profit Margin % (Profitability)",
+            "MD&A Sentiment P/N Ratio (Tone)",
+        ),
+    )
+    labels = [
+        f"T-{10 - i} ({aapl_ratios.iloc[i]['fiscal_year']}/{nvda_ratios.iloc[i]['fiscal_year']})"
+        for i in range(min(len(aapl_ratios), len(nvda_ratios)))
+    ]
+
+    # Margin
+    fig.add_trace(
+        go.Scatter(
+            x=labels,
+            y=aapl_ratios["net_profit_margin_pct"],
+            mode="lines+markers",
+            name="AAPL Margin %",
+            line=dict(color="#38BDF8", width=3),
+            marker=dict(size=7),
+        ),
+        row=1,
+        col=1,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=labels,
+            y=nvda_ratios["net_profit_margin_pct"],
+            mode="lines+markers",
+            name="NVDA Margin %",
+            line=dict(color="#10B981", width=3),
+            marker=dict(size=7),
+        ),
+        row=1,
+        col=1,
+    )
+
+    # Sentiment
+    fig.add_trace(
+        go.Scatter(
+            x=labels,
+            y=aapl_sent["pn_ratio"],
+            mode="lines+markers",
+            name="AAPL Sentiment P/N",
+            line=dict(color="#60A5FA", width=3, dash="dot"),
+            marker=dict(size=7, symbol="diamond"),
+        ),
+        row=1,
+        col=2,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=labels,
+            y=nvda_sent["pn_ratio"],
+            mode="lines+markers",
+            name="NVDA Sentiment P/N",
+            line=dict(color="#34D399", width=3, dash="dot"),
+            marker=dict(size=7, symbol="diamond"),
+        ),
+        row=1,
+        col=2,
+    )
+
+    fig.update_layout(
+        template="plotly_dark",
+        paper_bgcolor="rgba(15, 23, 42, 0.4)",
+        plot_bgcolor="rgba(15, 23, 42, 0.6)",
+        font=dict(family="Segoe UI, Inter, Arial", size=11, color="#E2E8F0"),
+        legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="right", x=1),
+        height=450,
+        margin=dict(l=50, r=40, t=80, b=40),
+    )
+    fig.update_yaxes(showgrid=True, gridcolor="#334155")
+    fig.update_xaxes(showgrid=True, gridcolor="#334155")
+    return fig
+
+
 # ---------------------------------------------------------------------------
 # Main Streamlit Application Controller
 # ---------------------------------------------------------------------------
@@ -617,6 +754,17 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
+    # Quick Switcher for Primary Project Companies
+    col_btn_aapl, col_btn_nvda, col_btn_empty = st.columns([1.3, 1.5, 4.2])
+    with col_btn_aapl:
+        if st.button("🍎 Apple Inc. (AAPL)", type="primary" if active_ticker == "AAPL" else "secondary", use_container_width=True):
+            st.session_state["current_ticker"] = "AAPL"
+            st.rerun()
+    with col_btn_nvda:
+        if st.button("🟢 NVIDIA Corp (NVDA)", type="primary" if active_ticker == "NVDA" else "secondary", use_container_width=True):
+            st.session_state["current_ticker"] = "NVDA"
+            st.rerun()
+
     # ---------------------------------------------------------------------------
     # Execute Pipeline Action
     # ---------------------------------------------------------------------------
@@ -738,13 +886,14 @@ def main() -> None:
     # ---------------------------------------------------------------------------
     # Main Tabs: Financial Statements, Charts, Ratios, Sentiment & Downloads
     # ---------------------------------------------------------------------------
-    tab_valuation, tab_statements, tab_ratios, tab_sentiment, tab_growth, tab_downloads = st.tabs(
+    tab_valuation, tab_statements, tab_ratios, tab_sentiment, tab_growth, tab_comparison, tab_downloads = st.tabs(
         [
             "🎯 Stock Price vs. Sentiment (Mandatory)",
             "📑 Three Financial Statements",
             "📐 10-Year Financial Ratios",
             "💬 MD&A Sentiment Analysis",
             "📊 Growth & Performance Trends",
+            "⚖️ Apple vs. NVIDIA Comparison",
             "📥 Export & Excel Downloads",
         ]
     )
@@ -776,6 +925,20 @@ def main() -> None:
     # Tab 2: Three Financial Statements (Interactive Side-by-Side Tables)
     # ---------------------------------------------------------------------------
     with tab_statements:
+        filter_query = st.text_input(
+            "🔍 Filter statement line items (e.g. Sales, Cash, Debt, Inventory, Research):",
+            key="stmt_filter_query",
+        ).strip()
+
+        def apply_filter(df: pd.DataFrame) -> pd.DataFrame:
+            if not filter_query:
+                return df
+            first_col = df.columns[0]
+            mask = df[first_col].astype(str).str.contains(filter_query, case=False, na=False)
+            mask.iloc[0] = True  # Always preserve header dates row
+            filtered = df[mask]
+            return filtered if len(filtered) > 1 else df
+
         sub_is, sub_bs, sub_cf, sub_audit = st.tabs(
             [
                 "Consolidated Income Statement",
@@ -787,16 +950,16 @@ def main() -> None:
 
         with sub_is:
             st.markdown(f"#### {comp_title}: Consolidated Statements of Operations ($ in Millions)")
-            st.dataframe(format_statement_display(data["income_df"]), use_container_width=True, hide_index=True)
+            st.dataframe(format_statement_display(apply_filter(data["income_df"])), use_container_width=True, hide_index=True)
 
         with sub_bs:
             st.markdown(f"#### {comp_title}: Consolidated Balance Sheets ($ in Millions)")
-            st.dataframe(format_statement_display(data["balance_df"]), use_container_width=True, hide_index=True)
+            st.dataframe(format_statement_display(apply_filter(data["balance_df"])), use_container_width=True, hide_index=True)
             st.caption("Verified Equation: Total Assets = Total Liabilities + Total Shareholders' Equity (10/10 PASS).")
 
         with sub_cf:
             st.markdown(f"#### {comp_title}: Consolidated Statements of Cash Flows ($ in Millions)")
-            st.dataframe(format_statement_display(data["cashflow_df"]), use_container_width=True, hide_index=True)
+            st.dataframe(format_statement_display(apply_filter(data["cashflow_df"])), use_container_width=True, hide_index=True)
 
         with sub_audit:
             st.markdown("#### Mathematical Integrity & Data-Quality Reconciliation")
@@ -903,7 +1066,92 @@ def main() -> None:
         st.dataframe(p_display, use_container_width=True, hide_index=True)
 
     # ---------------------------------------------------------------------------
-    # Tab 6: Excel Reports & CSV Exports
+    # Tab 6: Cross-Company Comparison (Apple vs. NVIDIA)
+    # ---------------------------------------------------------------------------
+    with tab_comparison:
+        st.markdown("### ⚖️ Cross-Company Comparative Analytics: Apple Inc. vs. NVIDIA Corporation")
+        st.caption(
+            "Direct side-by-side longitudinal comparison of scale, profitability, liquidity, and sentiment trajectories."
+        )
+
+        aapl_data = load_company_dataset("AAPL")
+        nvda_data = load_company_dataset("NVDA")
+
+        if aapl_data and nvda_data:
+            am = aapl_data["latest_metrics"]
+            nm = nvda_data["latest_metrics"]
+
+            # Comparative Metric Cards
+            c1, c2, c3, c4 = st.columns(4)
+            with c1:
+                st.metric(
+                    label="Comparative Net Revenue",
+                    value=f"${am['revenue']:,.0f}M",
+                    delta=f"NVDA: ${nm['revenue']:,.0f}M",
+                )
+            with c2:
+                st.metric(
+                    label="Comparative Net Income",
+                    value=f"${am['net_income']:,.0f}M",
+                    delta=f"NVDA: ${nm['net_income']:,.0f}M",
+                )
+            with c3:
+                st.metric(
+                    label="Comparative Net Margin",
+                    value=f"{am['net_margin']:.2f}%",
+                    delta=f"NVDA: {nm['net_margin']:.2f}%",
+                )
+            with c4:
+                st.metric(
+                    label="Comparative Current Ratio",
+                    value=f"{am['current_ratio']:.2f}x",
+                    delta=f"NVDA: {nm['current_ratio']:.2f}x",
+                )
+
+            # Comparative Plots
+            fig_comp_rev = chart_comparison_revenue_and_net_income(aapl_data["ratios_df"], nvda_data["ratios_df"])
+            st.plotly_chart(fig_comp_rev, use_container_width=True)
+
+            fig_comp_margins = chart_comparison_margins_and_sentiment(
+                aapl_data["ratios_df"],
+                nvda_data["ratios_df"],
+                aapl_data["sentiment_df"],
+                nvda_data["sentiment_df"],
+            )
+            st.plotly_chart(fig_comp_margins, use_container_width=True)
+
+            # Comparative Table
+            st.markdown("#### 10-Year Cross-Company Side-by-Side Summary")
+            a_r = aapl_data["ratios_df"]
+            n_r = nvda_data["ratios_df"]
+            a_s = aapl_data["sentiment_df"]
+            n_s = nvda_data["sentiment_df"]
+            a_p = aapl_data["prices_df"]
+            n_p = nvda_data["prices_df"]
+
+            comp_rows = []
+            for i in range(min(len(a_r), len(n_r))):
+                comp_rows.append({
+                    "Period": f"T-{10 - i} (AAPL {a_r.iloc[i]['fiscal_year']} / NVDA {n_r.iloc[i]['fiscal_year']})",
+                    "AAPL Rev ($M)": f"${a_r.iloc[i]['net_revenue_usd_m']:,.0f}M",
+                    "NVDA Rev ($M)": f"${n_r.iloc[i]['net_revenue_usd_m']:,.0f}M",
+                    "AAPL NI ($M)": f"${a_r.iloc[i]['net_income_usd_m']:,.0f}M",
+                    "NVDA NI ($M)": f"${n_r.iloc[i]['net_income_usd_m']:,.0f}M",
+                    "AAPL Margin": f"{a_r.iloc[i]['net_profit_margin_pct']:.2f}%",
+                    "NVDA Margin": f"{n_r.iloc[i]['net_profit_margin_pct']:.2f}%",
+                    "AAPL Current Ratio": f"{a_r.iloc[i]['current_ratio']:.2f}x",
+                    "NVDA Current Ratio": f"{n_r.iloc[i]['current_ratio']:.2f}x",
+                    "AAPL Sentiment P/N": f"{a_s.iloc[i]['pn_ratio']:.4f}",
+                    "NVDA Sentiment P/N": f"{n_s.iloc[i]['pn_ratio']:.4f}",
+                    "AAPL Stock ($)": f"${a_p.iloc[i]['closing_price_usd']:.2f}",
+                    "NVDA Stock ($)": f"${n_p.iloc[i]['closing_price_usd']:.2f}",
+                })
+            st.dataframe(pd.DataFrame(comp_rows), use_container_width=True, hide_index=True)
+        else:
+            st.info("Ensure both Apple (AAPL) and NVIDIA (NVDA) are analyzed to unlock the cross-company comparison view.")
+
+    # ---------------------------------------------------------------------------
+    # Tab 7: Excel Reports & CSV Exports
     # ---------------------------------------------------------------------------
     with tab_downloads:
         st.markdown("### Export Complete Analysis & Financial Models")

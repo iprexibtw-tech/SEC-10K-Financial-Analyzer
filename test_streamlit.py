@@ -12,6 +12,8 @@ from streamlit.testing.v1 import AppTest
 
 import config
 from streamlit_app import (
+    chart_comparison_margins_and_sentiment,
+    chart_comparison_revenue_and_net_income,
     chart_ratio_trends,
     chart_revenue_and_net_income,
     chart_sentiment_breakdown,
@@ -31,7 +33,7 @@ class TestStreamlitDashboard(unittest.TestCase):
         self.assertEqual(len(at.exception), 0, f"App execution raised exceptions: {at.exception}")
 
         # Verify metrics count and content
-        self.assertEqual(len(at.metric), 8, f"Expected 8 metrics, found {len(at.metric)}")
+        self.assertGreaterEqual(len(at.metric), 8, f"Expected at least 8 metrics, found {len(at.metric)}")
         labels = [m.label for m in at.metric]
         self.assertIn("Annual Net Revenue", labels)
         self.assertIn("Annual Net Income", labels)
@@ -131,6 +133,46 @@ class TestStreamlitDashboard(unittest.TestCase):
         self.assertEqual(formatted.iloc[0]["FY 2025"], "2025-09-27")
         # Revenue row has $416,161M
         self.assertEqual(formatted.iloc[1]["FY 2025"], "$416,161M")
+
+    def test_07_comparison_charts(self) -> None:
+        """Verify comparative charts generate valid multi-series traces for AAPL vs NVDA."""
+        aapl = load_company_dataset("AAPL")
+        nvda = load_company_dataset("NVDA")
+        self.assertIsNotNone(aapl)
+        self.assertIsNotNone(nvda)
+
+        # Revenue & NI comparison
+        fig_rev = chart_comparison_revenue_and_net_income(aapl["ratios_df"], nvda["ratios_df"])
+        self.assertEqual(len(fig_rev.data), 4, "Expected 4 traces in comparative rev/income chart")
+        names = [t.name for t in fig_rev.data]
+        self.assertIn("Apple (AAPL) Revenue", names)
+        self.assertIn("NVIDIA (NVDA) Revenue", names)
+
+        # Margin & sentiment comparison
+        fig_margins = chart_comparison_margins_and_sentiment(
+            aapl["ratios_df"], nvda["ratios_df"],
+            aapl["sentiment_df"], nvda["sentiment_df"]
+        )
+        self.assertEqual(len(fig_margins.data), 4, "Expected 4 traces in margins/sentiment chart")
+        names = [t.name for t in fig_margins.data]
+        self.assertIn("AAPL Margin %", names)
+        self.assertIn("NVDA Margin %", names)
+        self.assertIn("AAPL Sentiment P/N", names)
+        self.assertIn("NVDA Sentiment P/N", names)
+
+    def test_08_app_quick_switch_and_tabs(self) -> None:
+        """Verify quick switch buttons, 7 main tabs, and statement filtering in AppTest."""
+        at = AppTest.from_file("streamlit_app.py", default_timeout=30)
+        at.run()
+        self.assertEqual(len(at.exception), 0)
+
+        # Check tabs exist (7 tabs)
+        self.assertGreaterEqual(len(at.tabs), 7, f"Expected at least 7 tabs, found {len(at.tabs)}")
+
+        # Check quick switch buttons
+        btn_labels = [b.label for b in at.button]
+        self.assertTrue(any("Apple" in b for b in btn_labels), "Expected Apple quick switch button")
+        self.assertTrue(any("NVIDIA" in b for b in btn_labels), "Expected NVIDIA quick switch button")
 
 
 if __name__ == "__main__":
