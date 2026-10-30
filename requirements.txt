@@ -1,0 +1,24 @@
+# SEC 10-K Analysis Project Requirements
+# Stage 1: Standard library setup
+# Stage 2: SEC EDGAR Retrieval
+requests>=2.31.0
+
+# Stage 3: MD&A Text Extraction
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
+
+# Stage 4: Financial Statement Extraction & Excel Integration
+openpyxl>=3.1.0
+
+# Stage 7: Historical Stock Price Extraction
+yfinance>=0.2.35
+pandas>=2.0.0
+
+# Desktop GUI and Standalone Packaging
+customtkinter>=5.2.0
+pillow>=10.0.0
+pyinstaller>=6.0.0
+
+# Streamlit Financial Analytics Dashboard
+streamlit>=1.30.0
+plotly>=5.18.0

@@ -1,0 +1,60 @@
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Python Bytecode and Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# Operating System specific
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project Temporary and Data Output files (preserve folder structure via .gitkeep)
+data/raw_filings/*
+!data/raw_filings/.gitkeep
+
+data/extracted_text/*
+!data/extracted_text/.gitkeep
+
+data/cleaned_text/*
+!data/cleaned_text/.gitkeep
+
+data/financial_data/*
+!data/financial_data/.gitkeep
+!data/financial_data/company_tickers.json
+
+data/excel_outputs/*
+!data/excel_outputs/.gitkeep
+
+# Exclude raw HTML SEC filings from distribution/analyses folders to keep repo lightweight
+**/SEC Filings/*.htm
+**/SEC Filings/*.html
+
+# Project Configuration, Credentials and Secrets
+.sec_settings
+.env
+.env.*
+.streamlit/secrets.toml
+secrets.toml
+
+# Build artifacts & executables
+build/
+dist/
+*.exe
+*.zip
+SEC 10-K Financial Analyzer/
+
+*.tmp
+*.log

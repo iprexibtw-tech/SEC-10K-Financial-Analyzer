@@ -1,0 +1,11 @@
+company_ticker,fiscal_reporting_year,fiscal_period_end_date,source_mda_filename,total_word_count,positive_word_count,negative_word_count,uncertainty_word_count,litigious_word_count,strong_modal_word_count,weak_modal_word_count,constraining_word_count,pn_ratio,positive_word_frequency,negative_word_frequency,dictionary_version,processing_status
+AAPL,2016,2016-09-24,AAPL_2016_MDA.txt,8172,25,107,126,64,24,42,65,0.2336,0.31%,1.31%,Loughran-McDonald Master Dictionary (1993-2025),Verified
+AAPL,2017,2017-09-30,AAPL_2017_MDA.txt,8380,25,110,132,60,31,49,68,0.2273,0.30%,1.31%,Loughran-McDonald Master Dictionary (1993-2025),Verified
+AAPL,2018,2018-09-29,AAPL_2018_MDA.txt,8022,35,84,123,61,27,49,64,0.4167,0.44%,1.05%,Loughran-McDonald Master Dictionary (1993-2025),Verified
+AAPL,2019,2019-09-28,AAPL_2019_MDA.txt,4623,9,47,69,30,10,22,44,0.1915,0.19%,1.02%,Loughran-McDonald Master Dictionary (1993-2025),Verified
+AAPL,2020,2020-09-26,AAPL_2020_MDA.txt,4376,6,56,62,23,10,23,51,0.1071,0.14%,1.28%,Loughran-McDonald Master Dictionary (1993-2025),Verified
+AAPL,2021,2021-09-25,AAPL_2021_MDA.txt,2558,13,14,31,14,5,10,24,0.9286,0.51%,0.55%,Loughran-McDonald Master Dictionary (1993-2025),Verified
+AAPL,2022,2022-09-24,AAPL_2022_MDA.txt,2363,6,26,25,13,3,8,21,0.2308,0.25%,1.10%,Loughran-McDonald Master Dictionary (1993-2025),Verified
+AAPL,2023,2023-09-30,AAPL_2023_MDA.txt,2088,1,16,23,13,3,8,20,0.0625,0.05%,0.77%,Loughran-McDonald Master Dictionary (1993-2025),Verified
+AAPL,2024,2024-09-28,AAPL_2024_MDA.txt,2041,3,17,22,13,9,8,27,0.1765,0.15%,0.83%,Loughran-McDonald Master Dictionary (1993-2025),Verified
+AAPL,2025,2025-09-27,AAPL_2025_MDA.txt,2407,5,20,30,14,12,12,30,0.2500,0.21%,0.83%,Loughran-McDonald Master Dictionary (1993-2025),Verified

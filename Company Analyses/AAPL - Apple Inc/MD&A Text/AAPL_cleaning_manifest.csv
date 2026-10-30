@@ -1,0 +1,11 @@
+ticker,fiscal_year,source_mda_filename,cleaned_filename,cleaned_file_path,original_word_count,cleaned_word_count,sentiment_tokens_count,pct_change_word_count,cleaning_status,warnings
+AAPL,2025,AAPL_2025_MDA.txt,AAPL_2025_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\AAPL\AAPL_2025_MDA_CLEANED.txt,2805,2756,2407,-1.75,Verified,None
+AAPL,2024,AAPL_2024_MDA.txt,AAPL_2024_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\AAPL\AAPL_2024_MDA_CLEANED.txt,2441,2381,2041,-2.46,Verified,None
+AAPL,2023,AAPL_2023_MDA.txt,AAPL_2023_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\AAPL\AAPL_2023_MDA_CLEANED.txt,2487,2429,2088,-2.33,Verified,None
+AAPL,2022,AAPL_2022_MDA.txt,AAPL_2022_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\AAPL\AAPL_2022_MDA_CLEANED.txt,2768,2708,2363,-2.17,Verified,None
+AAPL,2021,AAPL_2021_MDA.txt,AAPL_2021_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\AAPL\AAPL_2021_MDA_CLEANED.txt,2925,2877,2558,-1.64,Verified,None
+AAPL,2020,AAPL_2020_MDA.txt,AAPL_2020_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\AAPL\AAPL_2020_MDA_CLEANED.txt,4923,4863,4376,-1.22,Verified,None
+AAPL,2019,AAPL_2019_MDA.txt,AAPL_2019_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\AAPL\AAPL_2019_MDA_CLEANED.txt,5249,5191,4623,-1.1,Verified,None
+AAPL,2018,AAPL_2018_MDA.txt,AAPL_2018_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\AAPL\AAPL_2018_MDA_CLEANED.txt,8955,8863,8022,-1.03,Verified,None
+AAPL,2017,AAPL_2017_MDA.txt,AAPL_2017_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\AAPL\AAPL_2017_MDA_CLEANED.txt,9411,9299,8380,-1.19,Verified,None
+AAPL,2016,AAPL_2016_MDA.txt,AAPL_2016_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\AAPL\AAPL_2016_MDA_CLEANED.txt,9194,9082,8172,-1.22,Verified,None

@@ -1,0 +1,11 @@
+ticker,fiscal_year,source_mda_filename,cleaned_filename,cleaned_file_path,original_word_count,cleaned_word_count,sentiment_tokens_count,pct_change_word_count,cleaning_status,warnings
+NVDA,2026,NVDA_2026_MDA.txt,NVDA_2026_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\NVDA\NVDA_2026_MDA_CLEANED.txt,5252,5249,4837,-0.06,Verified,None
+NVDA,2025,NVDA_2025_MDA.txt,NVDA_2025_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\NVDA\NVDA_2025_MDA_CLEANED.txt,5858,5858,5399,0.0,Verified,None
+NVDA,2024,NVDA_2024_MDA.txt,NVDA_2024_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\NVDA\NVDA_2024_MDA_CLEANED.txt,6239,6239,5752,0.0,Verified,None
+NVDA,2023,NVDA_2023_MDA.txt,NVDA_2023_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\NVDA\NVDA_2023_MDA_CLEANED.txt,5967,5967,5519,0.0,Verified,None
+NVDA,2022,NVDA_2022_MDA.txt,NVDA_2022_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\NVDA\NVDA_2022_MDA_CLEANED.txt,6434,6425,6019,-0.14,Verified,None
+NVDA,2021,NVDA_2021_MDA.txt,NVDA_2021_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\NVDA\NVDA_2021_MDA_CLEANED.txt,6445,6445,6022,0.0,Verified,None
+NVDA,2020,NVDA_2020_MDA.txt,NVDA_2020_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\NVDA\NVDA_2020_MDA_CLEANED.txt,5457,5457,4940,0.0,Verified,None
+NVDA,2019,NVDA_2019_MDA.txt,NVDA_2019_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\NVDA\NVDA_2019_MDA_CLEANED.txt,7683,7683,6858,0.0,Verified,None
+NVDA,2018,NVDA_2018_MDA.txt,NVDA_2018_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\NVDA\NVDA_2018_MDA_CLEANED.txt,7805,7805,7002,0.0,Verified,None
+NVDA,2017,NVDA_2017_MDA.txt,NVDA_2017_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\NVDA\NVDA_2017_MDA_CLEANED.txt,8422,8422,7584,0.0,Verified,None

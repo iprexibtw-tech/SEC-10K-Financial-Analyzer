@@ -1,0 +1,11 @@
+ticker,fiscal_year,source_filename,extracted_filename,extracted_file_path,word_count,start_line,end_line,end_boundary_label,status,warnings
+AAPL,2025,AAPL_10K_FY2025_2025-10-31.htm,AAPL_2025_MDA.txt,C:\Users\kevin\Downloads\Python 10-K\data\extracted_text\AAPL\AAPL_2025_MDA.txt,2805,585,960,Item 7A,Verified,None
+AAPL,2024,AAPL_10K_FY2024_2024-11-01.htm,AAPL_2024_MDA.txt,C:\Users\kevin\Downloads\Python 10-K\data\extracted_text\AAPL\AAPL_2024_MDA.txt,2441,594,962,Item 7A,Verified,None
+AAPL,2023,AAPL_10K_FY2023_2023-11-03.htm,AAPL_2023_MDA.txt,C:\Users\kevin\Downloads\Python 10-K\data\extracted_text\AAPL\AAPL_2023_MDA.txt,2487,588,950,Item 7A,Verified,None
+AAPL,2022,AAPL_10K_FY2022_2022-10-28.htm,AAPL_2022_MDA.txt,C:\Users\kevin\Downloads\Python 10-K\data\extracted_text\AAPL\AAPL_2022_MDA.txt,2768,599,1000,Item 7A,Verified,None
+AAPL,2021,AAPL_10K_FY2021_2021-10-29.htm,AAPL_2021_MDA.txt,C:\Users\kevin\Downloads\Python 10-K\data\extracted_text\AAPL\AAPL_2021_MDA.txt,2925,592,964,Item 7A,Verified,None
+AAPL,2020,AAPL_10K_FY2020_2020-10-30.htm,AAPL_2020_MDA.txt,C:\Users\kevin\Downloads\Python 10-K\data\extracted_text\AAPL\AAPL_2020_MDA.txt,4923,684,1206,Item 7A,Verified,None
+AAPL,2019,AAPL_10K_FY2019_2019-10-31.htm,AAPL_2019_MDA.txt,C:\Users\kevin\Downloads\Python 10-K\data\extracted_text\AAPL\AAPL_2019_MDA.txt,5249,746,1495,Item 7A,Verified,None
+AAPL,2018,AAPL_10K_FY2018_2018-11-05.htm,AAPL_2018_MDA.txt,C:\Users\kevin\Downloads\Python 10-K\data\extracted_text\AAPL\AAPL_2018_MDA.txt,8955,816,1928,Item 7A,Verified,None
+AAPL,2017,AAPL_10K_FY2017_2017-11-03.htm,AAPL_2017_MDA.txt,C:\Users\kevin\Downloads\Python 10-K\data\extracted_text\AAPL\AAPL_2017_MDA.txt,9411,911,2062,Item 7A,Verified,None
+AAPL,2016,AAPL_10K_FY2016_2016-10-26.htm,AAPL_2016_MDA.txt,C:\Users\kevin\Downloads\Python 10-K\data\extracted_text\AAPL\AAPL_2016_MDA.txt,9194,905,2004,Item 7A,Verified,None

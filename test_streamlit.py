@@ -1,0 +1,137 @@
+"""Unit and Integration Tests for Streamlit Financial Analytics Dashboard.
+
+Validates the Streamlit web dashboard (streamlit_app.py), session state transitions,
+Plotly chart generation, data loaders, statement formatting, and Excel downloads.
+"""
+
+import io
+import unittest
+import openpyxl
+import pandas as pd
+from streamlit.testing.v1 import AppTest
+
+import config
+from streamlit_app import (
+    chart_ratio_trends,
+    chart_revenue_and_net_income,
+    chart_sentiment_breakdown,
+    chart_stock_price_vs_sentiment,
+    format_statement_display,
+    load_company_dataset,
+)
+
+
+class TestStreamlitDashboard(unittest.TestCase):
+    """Test suite verifying Streamlit application rendering, state, and outputs."""
+
+    def test_01_app_default_aapl_rendering(self) -> None:
+        """Verify dashboard starts with AAPL, zero exceptions, and renders 8 metrics."""
+        at = AppTest.from_file("streamlit_app.py", default_timeout=30)
+        at.run()
+        self.assertEqual(len(at.exception), 0, f"App execution raised exceptions: {at.exception}")
+
+        # Verify metrics count and content
+        self.assertEqual(len(at.metric), 8, f"Expected 8 metrics, found {len(at.metric)}")
+        labels = [m.label for m in at.metric]
+        self.assertIn("Annual Net Revenue", labels)
+        self.assertIn("Annual Net Income", labels)
+        self.assertIn("Current Ratio (Liquidity)", labels)
+        self.assertIn("Debt-to-Equity (Solvency)", labels)
+        self.assertIn("Total Asset Turnover", labels)
+        self.assertIn("Net Profit Margin", labels)
+        self.assertIn("Sentiment P/N Ratio", labels)
+        self.assertIn("Closing Stock Price", labels)
+
+        # Verify AAPL metric values
+        metric_dict = {m.label: m.value for m in at.metric}
+        self.assertEqual(metric_dict["Annual Net Revenue"], "$416,161M")
+        self.assertEqual(metric_dict["Annual Net Income"], "$112,010M")
+        self.assertEqual(metric_dict["Current Ratio (Liquidity)"], "0.89x")
+        self.assertEqual(metric_dict["Debt-to-Equity (Solvency)"], "1.34x")
+        self.assertEqual(metric_dict["Total Asset Turnover"], "1.15x")
+        self.assertEqual(metric_dict["Net Profit Margin"], "26.92%")
+        self.assertEqual(metric_dict["Sentiment P/N Ratio"], "0.2500")
+        self.assertEqual(metric_dict["Closing Stock Price"], "$255.46")
+
+    def test_02_app_switch_to_nvda(self) -> None:
+        """Verify switching session state to NVDA loads NVDA results without errors."""
+        at = AppTest.from_file("streamlit_app.py", default_timeout=30)
+        at.run()
+        at.session_state["current_ticker"] = "NVDA"
+        at.run()
+        self.assertEqual(len(at.exception), 0, f"NVDA switch raised exceptions: {at.exception}")
+
+        metric_dict = {m.label: m.value for m in at.metric}
+        self.assertEqual(metric_dict["Annual Net Revenue"], "$215,938M")
+        self.assertEqual(metric_dict["Annual Net Income"], "$120,067M")
+        self.assertEqual(metric_dict["Current Ratio (Liquidity)"], "3.91x")
+        self.assertEqual(metric_dict["Debt-to-Equity (Solvency)"], "0.05x")
+        self.assertEqual(metric_dict["Total Asset Turnover"], "1.36x")
+        self.assertEqual(metric_dict["Net Profit Margin"], "55.60%")
+        self.assertEqual(metric_dict["Sentiment P/N Ratio"], "0.3684")
+        self.assertEqual(metric_dict["Closing Stock Price"], "$187.67")
+
+    def test_03_load_company_dataset(self) -> None:
+        """Verify load_company_dataset extracts valid datasets and Excel bytes for AAPL and NVDA."""
+        for ticker in ["AAPL", "NVDA"]:
+            data = load_company_dataset(ticker)
+            self.assertIsNotNone(data, f"load_company_dataset returned None for {ticker}")
+            self.assertEqual(data["ticker"], ticker)
+            self.assertEqual(data["ratios_df"].shape[0], 10)
+            self.assertEqual(data["sentiment_df"].shape[0], 10)
+            self.assertEqual(data["prices_df"].shape[0], 10)
+            self.assertEqual(data["income_df"].shape[0], 14)
+            self.assertEqual(data["balance_df"].shape[0], 29)
+            self.assertEqual(data["cashflow_df"].shape[0], 22)
+
+            # Test Excel workbook bytes integrity
+            wb_bytes = data["wb_bytes"]
+            self.assertGreater(len(wb_bytes), 20000, "Workbook bytes too small")
+            wb = openpyxl.load_workbook(io.BytesIO(wb_bytes), data_only=True)
+            self.assertEqual(len(wb.sheetnames), 8)
+            self.assertIn("Income Statement", wb.sheetnames)
+            self.assertIn("Charts and Analysis", wb.sheetnames)
+
+    def test_04_dual_axis_stock_sentiment_chart(self) -> None:
+        """Verify Professor's mandatory dual-axis chart has two traces and secondary axis."""
+        data = load_company_dataset("AAPL")
+        self.assertIsNotNone(data)
+        fig = chart_stock_price_vs_sentiment(data["prices_df"], data["sentiment_df"], "AAPL")
+
+        self.assertEqual(len(fig.data), 2, "Expected 2 traces on dual-axis chart")
+        self.assertEqual(fig.data[0].name, "Stock Price ($ USD)")
+        self.assertEqual(fig.data[1].name, "Sentiment P/N Ratio")
+        self.assertIn("Longitudinal Correlation", fig.layout.title.text)
+
+    def test_05_additional_plotly_charts(self) -> None:
+        """Verify auxiliary charts (Revenue/NI, Ratios 4-panel, Sentiment breakdown)."""
+        data = load_company_dataset("NVDA")
+        self.assertIsNotNone(data)
+
+        # Revenue & NI
+        fig_rev = chart_revenue_and_net_income(data["ratios_df"], "NVDA")
+        self.assertEqual(len(fig_rev.data), 2)
+
+        # Ratio Trends (4 subplots)
+        fig_ratios = chart_ratio_trends(data["ratios_df"], "NVDA")
+        self.assertEqual(len(fig_ratios.data), 4)
+
+        # Sentiment breakdown
+        fig_sent = chart_sentiment_breakdown(data["sentiment_df"], "NVDA")
+        self.assertEqual(len(fig_sent.data), 2)
+
+    def test_06_statement_formatting(self) -> None:
+        """Verify format_statement_display preserves dates and formats dollar values with $ and M."""
+        data = load_company_dataset("AAPL")
+        self.assertIsNotNone(data)
+        formatted = format_statement_display(data["income_df"])
+        self.assertEqual(formatted.shape, data["income_df"].shape)
+
+        # First row is Fiscal Period-End Date
+        self.assertEqual(formatted.iloc[0]["FY 2025"], "2025-09-27")
+        # Revenue row has $416,161M
+        self.assertEqual(formatted.iloc[1]["FY 2025"], "$416,161M")
+
+
+if __name__ == "__main__":
+    unittest.main()
