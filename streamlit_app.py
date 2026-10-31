@@ -615,12 +615,33 @@ def main() -> None:
     config.init_directories()
 
     # Session State Initialization
+    if "selected_ticker" not in st.session_state:
+        st.session_state["selected_ticker"] = "AAPL"
     if "current_ticker" not in st.session_state:
-        st.session_state["current_ticker"] = "AAPL"
+        st.session_state["current_ticker"] = st.session_state["selected_ticker"]
+    if "custom_ticker_input" not in st.session_state:
+        st.session_state["custom_ticker_input"] = st.session_state["selected_ticker"]
     if "analysis_in_progress" not in st.session_state:
         st.session_state["analysis_in_progress"] = False
     if "last_status_msg" not in st.session_state:
         st.session_state["last_status_msg"] = None
+
+    # Helper function to switch selected ticker across all state keys
+    def set_active_ticker(new_ticker: str) -> None:
+        clean = new_ticker.strip().upper()
+        if not clean:
+            return
+        st.session_state["selected_ticker"] = clean
+        st.session_state["current_ticker"] = clean
+        st.session_state["custom_ticker_input"] = clean
+        # Sync history dropdown key if available
+        analyzed = config.get_analyzed_companies()
+        t_to_d = {t.upper(): disp for t, disp, _ in analyzed}
+        st.session_state["history_select_key"] = t_to_d.get(clean, None)
+
+    # Synchronize if external code set current_ticker directly
+    if st.session_state.get("current_ticker", "").strip().upper() != st.session_state["selected_ticker"]:
+        set_active_ticker(st.session_state["current_ticker"])
 
     # Sidebar Construction
     st.sidebar.markdown(
@@ -637,42 +658,60 @@ def main() -> None:
     st.sidebar.subheader("🏢 Company Selection")
     analyzed_companies = config.get_analyzed_companies()
 
-    # Pre-populate dropdown options
     display_options = [disp for _, disp, _ in analyzed_companies]
-    ticker_map = {disp: t for t, disp, _ in analyzed_companies}
+    ticker_to_disp = {t.upper(): disp for t, disp, _ in analyzed_companies}
+    disp_to_ticker = {disp: t.upper() for t, disp, _ in analyzed_companies}
 
-    # Find index of currently selected ticker
-    current_idx = 0
-    for idx, (t, _, _) in enumerate(analyzed_companies):
-        if t.upper() == st.session_state["current_ticker"].upper():
-            current_idx = idx
-            break
+    active_ticker = st.session_state["selected_ticker"].upper()
+    current_disp = ticker_to_disp.get(active_ticker, None)
+    current_idx = display_options.index(current_disp) if (current_disp and current_disp in display_options) else None
 
-    selected_display = st.sidebar.selectbox(
+    # Initialize history_select_key if not set
+    if "history_select_key" not in st.session_state or st.session_state["history_select_key"] not in disp_to_ticker:
+        st.session_state["history_select_key"] = current_disp
+
+    def on_history_change() -> None:
+        chosen = st.session_state.get("history_select_key")
+        if chosen and chosen in disp_to_ticker:
+            set_active_ticker(disp_to_ticker[chosen])
+
+    st.sidebar.selectbox(
         "Analyzed Companies History",
         options=display_options if display_options else ["AAPL - Apple Inc"],
-        index=current_idx if display_options else 0,
+        index=current_idx,
+        placeholder="Select a previously analyzed company..." if current_idx is None else None,
+        key="history_select_key",
+        on_change=on_history_change,
         help="Quickly switch between pre-analyzed corporate datasets without recalculation.",
     )
 
-    if selected_display and selected_display in ticker_map:
-        history_ticker = ticker_map[selected_display]
-        if history_ticker != st.session_state["current_ticker"]:
-            st.session_state["current_ticker"] = history_ticker
-            st.rerun()
-
     # 2. Manual Ticker & Search
     st.sidebar.markdown("<hr style='margin: 12px 0; border-color: #334155;' />", unsafe_allow_html=True)
-    custom_ticker = st.sidebar.text_input(
+
+    def on_custom_ticker_change() -> None:
+        typed = st.session_state.get("custom_ticker_input", "").strip().upper()
+        if typed:
+            set_active_ticker(typed)
+
+    st.sidebar.text_input(
         "Or Enter Ticker Symbol",
-        value=st.session_state["current_ticker"],
-        max_chars=6,
+        key="custom_ticker_input",
+        max_chars=10,
+        on_change=on_custom_ticker_change,
         help="Enter any official SEC EDGAR ticker (e.g. AAPL, NVDA, MSFT, GOOGL, TSLA)",
-    ).strip().upper()
+    )
+
+    # Check if text input has an unsynced value
+    current_text_val = st.session_state.get("custom_ticker_input", "").strip().upper()
+    if current_text_val and current_text_val != st.session_state["selected_ticker"]:
+        set_active_ticker(current_text_val)
+        active_ticker = current_text_val
+    else:
+        active_ticker = st.session_state["selected_ticker"].upper()
 
     # Company Name Search
     with st.sidebar.expander("🔍 Search by Company Name"):
-        search_query = st.text_input("Corporate Legal Name", placeholder="e.g. Microsoft, Tesla, Amazon")
+        search_query = st.text_input("Corporate Legal Name", placeholder="e.g. Microsoft, Tesla, Amazon", key="search_query_input")
         if search_query:
             try:
                 matches = get_sec_downloader().search_companies(search_query, limit=5)
@@ -682,7 +721,7 @@ def main() -> None:
                         col_info, col_btn = st.columns([3, 1])
                         col_info.write(f"**{m['ticker']}** — {m['title'][:22]}")
                         if col_btn.button("Select", key=f"sel_{m['ticker']}"):
-                            st.session_state["current_ticker"] = m["ticker"]
+                            set_active_ticker(m["ticker"])
                             st.rerun()
                 else:
                     st.caption("No matching companies found in SEC registry.")
@@ -727,57 +766,37 @@ def main() -> None:
     )
 
     # ---------------------------------------------------------------------------
-    # Main Dashboard Header
+    # Ticker Validation & SEC EDGAR Resolution
     # ---------------------------------------------------------------------------
-    active_ticker = custom_ticker if custom_ticker else st.session_state["current_ticker"]
+    downloader = get_sec_downloader()
+    is_valid_ticker = True
+    cik_str = None
+    comp_title = active_ticker
+    validation_err_msg = None
 
-    # Resolve company name
     try:
-        _, comp_title = get_sec_downloader().get_company_cik(active_ticker)
-    except Exception:
-        comp_title = "Selected Corporation"
+        cik_str, comp_title = downloader.get_company_cik(active_ticker)
+    except SECCompanyNotFoundError as not_found_err:
+        is_valid_ticker = False
+        validation_err_msg = str(not_found_err)
+    except Exception as exc:
+        # Transient connection error or offline mode: check if local analyzed folder exists
+        comp_folder = config.get_company_folder(active_ticker)
+        if comp_folder and comp_folder.exists():
+            comp_title = comp_folder.name.split("-", 1)[-1].strip() if "-" in comp_folder.name else active_ticker
+        else:
+            comp_title = f"{active_ticker} (SEC Registrant)"
 
-    col_title, col_status = st.columns([3, 1])
-    with col_title:
-        st.markdown(
-            f"<h1 class='sec-header'>{comp_title} ({active_ticker})</h1>"
-            f"<p class='sec-sub'>SEC EDGAR Longitudinal Accounting & Sentiment Intelligence</p>",
-            unsafe_allow_html=True,
-        )
-    with col_status:
-        st.markdown(
-            """
-            <div style="text-align: right; padding-top: 10px;">
-                <span class="audit-badge">✓ Audit Verified (10/10 Balance Sheets)</span>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    # Quick Switcher for Primary Project Companies
-    col_btn_aapl, col_btn_nvda, col_btn_empty = st.columns([1.3, 1.5, 4.2])
-    with col_btn_aapl:
-        if st.button("🍎 Apple Inc. (AAPL)", type="primary" if active_ticker == "AAPL" else "secondary", use_container_width=True):
-            st.session_state["current_ticker"] = "AAPL"
-            st.rerun()
-    with col_btn_nvda:
-        if st.button("🟢 NVIDIA Corp (NVDA)", type="primary" if active_ticker == "NVDA" else "secondary", use_container_width=True):
-            st.session_state["current_ticker"] = "NVDA"
-            st.rerun()
-
-    # ---------------------------------------------------------------------------
-    # Execute Pipeline Action
-    # ---------------------------------------------------------------------------
-    if run_analysis:
-        if not config.get_sec_user_agent():
+    # Execution Helper for Live Analysis
+    def execute_live_analysis(ticker_to_run: str, title_to_run: str, count_to_run: int) -> None:
+        user_agent = config.get_sec_user_agent()
+        if not user_agent:
             st.error("SEC User-Agent header is missing! Please configure your Name and Email in the sidebar.")
             return
 
-        st.session_state["current_ticker"] = active_ticker
         progress_box = st.container()
-
         with progress_box:
-            st.info(f"Initiating 8-stage analytical pipeline for {comp_title} ({active_ticker}) across {filings_count} filings...")
+            st.info(f"Initiating 8-stage analytical pipeline for {title_to_run} ({ticker_to_run}) across {count_to_run} filings...")
             pbar = st.progress(0.0)
             status_text = st.empty()
 
@@ -788,15 +807,18 @@ def main() -> None:
 
             try:
                 summary = run_full_pipeline(
-                    ticker=active_ticker,
-                    count=filings_count,
+                    ticker=ticker_to_run,
+                    count=count_to_run,
+                    user_agent=user_agent,
                     progress_callback=progress_callback,
                     return_summary=True,
                 )
                 if summary.get("status"):
                     pbar.progress(1.0)
                     elapsed = summary.get("elapsed_time", 0.0)
-                    st.success(f"✓ Analysis complete for {active_ticker} in {elapsed:.2f} seconds! Synchronized into Company Analyses/.")
+                    st.success(f"✓ Analysis complete for {ticker_to_run} in {elapsed:.2f} seconds! Synchronized into Company Analyses/.")
+                    load_company_dataset.clear()
+                    set_active_ticker(ticker_to_run)
                     time.sleep(1.0)
                     st.rerun()
                 else:
@@ -805,15 +827,105 @@ def main() -> None:
             except Exception as e:
                 st.error(f"Execution error: {e}")
 
-    # ---------------------------------------------------------------------------
-    # Load and Present Financial Datasets
-    # ---------------------------------------------------------------------------
-    data = load_company_dataset(active_ticker)
-    if not data:
-        st.warning(
-            f"No existing analytical models found for **{active_ticker}**. "
-            f"Click **'▶ Run Complete 10-K Analysis'** in the sidebar to download SEC filings and generate reports."
+    # Handle sidebar "Run Analysis" button
+    if run_analysis:
+        if not is_valid_ticker:
+            st.error(f"Cannot analyze `{active_ticker}`: Ticker symbol was not found in SEC EDGAR registry.")
+        else:
+            execute_live_analysis(active_ticker, comp_title, filings_count)
+
+    # If Invalid Ticker: Display clear error and exit gracefully
+    if not is_valid_ticker:
+        col_title, col_status = st.columns([3, 1])
+        with col_title:
+            st.markdown(
+                f"<h1 class='sec-header'>{active_ticker}</h1>"
+                f"<p class='sec-sub'>SEC EDGAR Longitudinal Accounting & Sentiment Intelligence</p>",
+                unsafe_allow_html=True,
+            )
+        with col_status:
+            st.markdown(
+                """
+                <div style="text-align: right; padding-top: 10px;">
+                    <span class="audit-badge" style="background: rgba(239, 68, 68, 0.2); color: #EF4444; border: 1px solid #EF4444;">✗ Ticker Not Found</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        st.error(
+            f"❌ **Invalid Ticker Symbol:** `{active_ticker}` was not found in the official SEC EDGAR company registry.\n\n"
+            f"**Error Details:** {validation_err_msg}\n\n"
+            f"Please verify the ticker symbol (e.g. **AAPL**, **NVDA**, **MSFT**, **GOOGL**, **TSLA**, **AMZN**) "
+            f"or use the **🔍 Search by Company Name** expander in the sidebar."
         )
+
+        col_ret1, col_ret2, _ = st.columns([1.5, 1.5, 4])
+        with col_ret1:
+            if st.button("🍎 Return to Apple Inc. (AAPL)", key="ret_aapl"):
+                set_active_ticker("AAPL")
+                st.rerun()
+        with col_ret2:
+            if st.button("🟢 Return to NVIDIA Corp (NVDA)", key="ret_nvda"):
+                set_active_ticker("NVDA")
+                st.rerun()
+        return
+
+    # Load dataset for valid active_ticker
+    data = load_company_dataset(active_ticker)
+
+    # Main Dashboard Header for Valid Ticker
+    col_title, col_status = st.columns([3, 1])
+    with col_title:
+        st.markdown(
+            f"<h1 class='sec-header'>{comp_title} ({active_ticker})</h1>"
+            f"<p class='sec-sub'>SEC EDGAR Longitudinal Accounting & Sentiment Intelligence</p>",
+            unsafe_allow_html=True,
+        )
+    with col_status:
+        if data is not None:
+            st.markdown(
+                """
+                <div style="text-align: right; padding-top: 10px;">
+                    <span class="audit-badge">✓ Audit Verified (10/10 Balance Sheets)</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown(
+                """
+                <div style="text-align: right; padding-top: 10px;">
+                    <span class="audit-badge" style="background: rgba(56, 189, 248, 0.2); color: #38BDF8; border: 1px solid #38BDF8;">⏳ Ready for Analysis</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+    # Quick Switcher for Primary Project Companies
+    col_btn_aapl, col_btn_nvda, col_btn_empty = st.columns([1.3, 1.5, 4.2])
+    with col_btn_aapl:
+        if st.button("🍎 Apple Inc. (AAPL)", type="primary" if active_ticker == "AAPL" else "secondary", use_container_width=True, key="quick_btn_aapl"):
+            set_active_ticker("AAPL")
+            st.rerun()
+    with col_btn_nvda:
+        if st.button("🟢 NVIDIA Corp (NVDA)", type="primary" if active_ticker == "NVDA" else "secondary", use_container_width=True, key="quick_btn_nvda"):
+            set_active_ticker("NVDA")
+            st.rerun()
+
+    # If dataset has not been generated yet for this valid ticker
+    if not data:
+        st.info(
+            f"ℹ️ **No existing analytical models found for {comp_title} ({active_ticker}).**\n\n"
+            f"Click **'▶ Run Complete 10-K Analysis'** in the sidebar (or the button below) to download "
+            f"annual Form 10-K filings from SEC EDGAR, extract Item 7 MD&A narratives, run sentiment analysis, "
+            f"compute financial ratios, and build longitudinal financial models."
+        )
+
+        col_run_direct, _ = st.columns([2, 5])
+        with col_run_direct:
+            if st.button(f"▶ Run Analysis for {active_ticker}", type="primary", use_container_width=True, key="btn_run_direct"):
+                execute_live_analysis(active_ticker, comp_title, filings_count)
         return
 
     metrics = data["latest_metrics"]

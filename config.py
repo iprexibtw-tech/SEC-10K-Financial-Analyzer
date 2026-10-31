@@ -178,6 +178,10 @@ def is_valid_user_agent(user_agent: str) -> bool:
     return bool(has_email and has_name and is_not_default)
 
 
+# Default compliant academic user agent for Streamlit Community Cloud
+DEFAULT_ACADEMIC_USER_AGENT: str = "SEC10KFinancialAnalyzer academic-research@sec10kanalyzer.edu"
+
+
 def get_sec_user_agent() -> Optional[str]:
     """Retrieve the configured SEC User-Agent header.
 
@@ -186,9 +190,10 @@ def get_sec_user_agent() -> Optional[str]:
     2. Streamlit secrets `st.secrets["SEC_USER_AGENT"]` (for Streamlit Community Cloud).
     3. Local `.sec_settings` file if available.
     4. Bundled settings file if frozen.
+    5. Fallback compliant academic user agent (`DEFAULT_ACADEMIC_USER_AGENT`).
 
     Returns:
-        Optional[str]: Configured User-Agent string, or None if not set.
+        Optional[str]: Configured User-Agent string.
     """
     env_agent = os.getenv("SEC_USER_AGENT")
     if env_agent and is_valid_user_agent(env_agent):
@@ -228,7 +233,7 @@ def get_sec_user_agent() -> Optional[str]:
             except OSError:
                 pass
 
-    return None
+    return DEFAULT_ACADEMIC_USER_AGENT
 
 
 def save_sec_user_agent(user_agent: str) -> None:

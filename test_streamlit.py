@@ -174,6 +174,105 @@ class TestStreamlitDashboard(unittest.TestCase):
         self.assertTrue(any("Apple" in b for b in btn_labels), "Expected Apple quick switch button")
         self.assertTrue(any("NVIDIA" in b for b in btn_labels), "Expected NVIDIA quick switch button")
 
+    def test_09_custom_ticker_selection_msft(self) -> None:
+        """Verify selecting a custom ticker (MSFT) preserves selection and renders data."""
+        at = AppTest.from_file("streamlit_app.py", default_timeout=30)
+        at.run()
+        self.assertEqual(len(at.exception), 0)
+
+        # Switch to custom ticker MSFT
+        at.session_state["selected_ticker"] = "MSFT"
+        at.session_state["current_ticker"] = "MSFT"
+        at.session_state["custom_ticker_input"] = "MSFT"
+        at.run()
+        self.assertEqual(len(at.exception), 0)
+        self.assertEqual(at.session_state["selected_ticker"], "MSFT")
+
+        # Verify MSFT metrics
+        metric_dict = {m.label: m.value for m in at.metric}
+        self.assertEqual(metric_dict["Annual Net Revenue"], "$331,839M")
+        self.assertEqual(metric_dict["Annual Net Income"], "$133,749M")
+        self.assertEqual(metric_dict["Current Ratio (Liquidity)"], "1.23x")
+
+    def test_10_invalid_ticker_handling(self) -> None:
+        """Verify entering an invalid ticker displays clear error without crashing or falling back."""
+        at = AppTest.from_file("streamlit_app.py", default_timeout=30)
+        at.run()
+        self.assertEqual(len(at.exception), 0)
+
+        # Set invalid ticker
+        at.session_state["selected_ticker"] = "INVALID123"
+        at.session_state["current_ticker"] = "INVALID123"
+        at.session_state["custom_ticker_input"] = "INVALID123"
+        at.run()
+        self.assertEqual(len(at.exception), 0)
+
+        # Verify clear error message is displayed
+        error_texts = [e.value for e in at.error]
+        self.assertTrue(any("Invalid Ticker Symbol" in t for t in error_texts))
+        self.assertTrue(any("INVALID123" in t for t in error_texts))
+
+        # Verify no financial statement metrics are displayed under the invalid ticker
+        self.assertEqual(len(at.metric), 0)
+
+    def test_11_multi_company_switching_and_refresh(self) -> None:
+        """Verify seamless switching between AAPL, NVDA, and MSFT with state preservation."""
+        at = AppTest.from_file("streamlit_app.py", default_timeout=30)
+        at.run()
+
+        # Step 1: Default is AAPL
+        metric_dict = {m.label: m.value for m in at.metric}
+        self.assertEqual(metric_dict["Annual Net Revenue"], "$416,161M")
+
+        # Step 2: Switch to NVDA
+        at.session_state["selected_ticker"] = "NVDA"
+        at.session_state["current_ticker"] = "NVDA"
+        at.session_state["custom_ticker_input"] = "NVDA"
+        at.run()
+        metric_dict = {m.label: m.value for m in at.metric}
+        self.assertEqual(metric_dict["Annual Net Revenue"], "$215,938M")
+
+        # Step 3: Switch to MSFT
+        at.session_state["selected_ticker"] = "MSFT"
+        at.session_state["current_ticker"] = "MSFT"
+        at.session_state["custom_ticker_input"] = "MSFT"
+        at.run()
+        metric_dict = {m.label: m.value for m in at.metric}
+        self.assertEqual(metric_dict["Annual Net Revenue"], "$331,839M")
+
+        # Step 4: Refresh (rerun without changing state)
+        at.run()
+        self.assertEqual(at.session_state["selected_ticker"], "MSFT")
+        metric_dict = {m.label: m.value for m in at.metric}
+        self.assertEqual(metric_dict["Annual Net Revenue"], "$331,839M")
+
+        # Step 5: Switch back to AAPL
+        at.session_state["selected_ticker"] = "AAPL"
+        at.session_state["current_ticker"] = "AAPL"
+        at.session_state["custom_ticker_input"] = "AAPL"
+        at.run()
+        metric_dict = {m.label: m.value for m in at.metric}
+        self.assertEqual(metric_dict["Annual Net Revenue"], "$416,161M")
+
+    def test_12_unanalyzed_valid_company_prompt(self) -> None:
+        """Verify unanalyzed valid ticker (e.g. TSLA) prompts analysis without crashing."""
+        at = AppTest.from_file("streamlit_app.py", default_timeout=30)
+        at.run()
+
+        at.session_state["selected_ticker"] = "TSLA"
+        at.session_state["current_ticker"] = "TSLA"
+        at.session_state["custom_ticker_input"] = "TSLA"
+        at.run()
+        self.assertEqual(len(at.exception), 0)
+
+        # Verify no statement metrics yet
+        self.assertEqual(len(at.metric), 0)
+
+        # Verify info prompt exists
+        info_texts = [i.value for i in at.info]
+        self.assertTrue(any("No existing analytical models found" in t for t in info_texts))
+        self.assertTrue(any("TSLA" in t for t in info_texts))
+
 
 if __name__ == "__main__":
     unittest.main()
