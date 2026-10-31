@@ -1,0 +1,4 @@
+company_ticker,fiscal_year,fiscal_balance_sheet_date,actual_trading_date,offset_days,closing_price_usd,adjusted_closing_price_usd,trading_volume,primary_measure,data_source,retrieval_status,notes
+AMD,2023,2023-12-30,2023-12-29,1,147.41,147.41,62079200,Split-Adjusted Closing Price,Yahoo Finance (via yfinance),Verified,Balance sheet date was a non-trading day (weekend/holiday). Price matched to preceding trading day (1 day(s) earlier).
+AMD,2024,2024-12-28,2024-12-27,1,125.19,125.19,32924000,Split-Adjusted Closing Price,Yahoo Finance (via yfinance),Verified,Balance sheet date was a non-trading day (weekend/holiday). Price matched to preceding trading day (1 day(s) earlier).
+AMD,2025,2025-12-27,2025-12-26,1,214.99,214.99,15792600,Split-Adjusted Closing Price,Yahoo Finance (via yfinance),Verified,Balance sheet date was a non-trading day (weekend/holiday). Price matched to preceding trading day (1 day(s) earlier).

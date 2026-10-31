@@ -614,34 +614,40 @@ def main() -> None:
     # Initialize directory infrastructure
     config.init_directories()
 
-    # Session State Initialization
-    if "selected_ticker" not in st.session_state:
-        st.session_state["selected_ticker"] = "AAPL"
-    if "current_ticker" not in st.session_state:
-        st.session_state["current_ticker"] = st.session_state["selected_ticker"]
-    if "custom_ticker_input" not in st.session_state:
-        st.session_state["custom_ticker_input"] = st.session_state["selected_ticker"]
+    # Session State Initialization (Primary Key: active_ticker)
+    if "active_ticker" not in st.session_state:
+        init_t = st.session_state.get("selected_ticker") or st.session_state.get("current_ticker") or "AAPL"
+        st.session_state["active_ticker"] = init_t.strip().upper()
+    if "last_synced_active" not in st.session_state:
+        st.session_state["last_synced_active"] = st.session_state["active_ticker"]
+
+    # Detect if legacy keys were explicitly changed by external callers or older tests
+    if "current_ticker" in st.session_state and st.session_state["current_ticker"].strip().upper() != st.session_state["last_synced_active"]:
+        st.session_state["active_ticker"] = st.session_state["current_ticker"].strip().upper()
+    elif "selected_ticker" in st.session_state and st.session_state["selected_ticker"].strip().upper() != st.session_state["last_synced_active"]:
+        st.session_state["active_ticker"] = st.session_state["selected_ticker"].strip().upper()
+
+    # Keep all synchronization tracking and aliases in sync with active_ticker
+    st.session_state["last_synced_active"] = st.session_state["active_ticker"]
+    st.session_state["selected_ticker"] = st.session_state["active_ticker"]
+    st.session_state["current_ticker"] = st.session_state["active_ticker"]
+
     if "analysis_in_progress" not in st.session_state:
         st.session_state["analysis_in_progress"] = False
     if "last_status_msg" not in st.session_state:
         st.session_state["last_status_msg"] = None
+    if "last_processed_custom" not in st.session_state:
+        st.session_state["last_processed_custom"] = ""
 
-    # Helper function to switch selected ticker across all state keys
-    def set_active_ticker(new_ticker: str) -> None:
+    # Helper function to switch active ticker WITHOUT modifying instantiated widget keys
+    def set_active_company(new_ticker: str) -> None:
         clean = new_ticker.strip().upper()
         if not clean:
             return
+        st.session_state["active_ticker"] = clean
+        st.session_state["last_synced_active"] = clean
         st.session_state["selected_ticker"] = clean
         st.session_state["current_ticker"] = clean
-        st.session_state["custom_ticker_input"] = clean
-        # Sync history dropdown key if available
-        analyzed = config.get_analyzed_companies()
-        t_to_d = {t.upper(): disp for t, disp, _ in analyzed}
-        st.session_state["history_select_key"] = t_to_d.get(clean, None)
-
-    # Synchronize if external code set current_ticker directly
-    if st.session_state.get("current_ticker", "").strip().upper() != st.session_state["selected_ticker"]:
-        set_active_ticker(st.session_state["current_ticker"])
 
     # Sidebar Construction
     st.sidebar.markdown(
@@ -662,28 +668,23 @@ def main() -> None:
     ticker_to_disp = {t.upper(): disp for t, disp, _ in analyzed_companies}
     disp_to_ticker = {disp: t.upper() for t, disp, _ in analyzed_companies}
 
-    active_ticker = st.session_state["selected_ticker"].upper()
+    active_ticker = st.session_state["active_ticker"].upper()
     current_disp = ticker_to_disp.get(active_ticker, None)
     current_idx = display_options.index(current_disp) if (current_disp and current_disp in display_options) else None
 
-    # Initialize history_select_key if not set
-    if "history_select_key" not in st.session_state or st.session_state["history_select_key"] not in disp_to_ticker:
-        st.session_state["history_select_key"] = current_disp
-
-    def on_history_change() -> None:
-        chosen = st.session_state.get("history_select_key")
-        if chosen and chosen in disp_to_ticker:
-            set_active_ticker(disp_to_ticker[chosen])
-
-    st.sidebar.selectbox(
+    selected_display = st.sidebar.selectbox(
         "Analyzed Companies History",
         options=display_options if display_options else ["AAPL - Apple Inc"],
         index=current_idx,
         placeholder="Select a previously analyzed company..." if current_idx is None else None,
-        key="history_select_key",
-        on_change=on_history_change,
         help="Quickly switch between pre-analyzed corporate datasets without recalculation.",
     )
+
+    if selected_display and selected_display in disp_to_ticker:
+        chosen_ticker = disp_to_ticker[selected_display]
+        if chosen_ticker != active_ticker:
+            set_active_company(chosen_ticker)
+            st.rerun()
 
     # 2. Manual Ticker & Search
     st.sidebar.markdown("<hr style='margin: 12px 0; border-color: #334155;' />", unsafe_allow_html=True)
@@ -691,7 +692,8 @@ def main() -> None:
     def on_custom_ticker_change() -> None:
         typed = st.session_state.get("custom_ticker_input", "").strip().upper()
         if typed:
-            set_active_ticker(typed)
+            st.session_state["last_processed_custom"] = typed
+            set_active_company(typed)
 
     st.sidebar.text_input(
         "Or Enter Ticker Symbol",
@@ -701,13 +703,14 @@ def main() -> None:
         help="Enter any official SEC EDGAR ticker (e.g. AAPL, NVDA, MSFT, GOOGL, TSLA)",
     )
 
-    # Check if text input has an unsynced value
-    current_text_val = st.session_state.get("custom_ticker_input", "").strip().upper()
-    if current_text_val and current_text_val != st.session_state["selected_ticker"]:
-        set_active_ticker(current_text_val)
-        active_ticker = current_text_val
+    # Detect custom ticker changes (e.g., set externally in AppTest or via button submit)
+    curr_custom = st.session_state.get("custom_ticker_input", "").strip().upper()
+    if curr_custom and curr_custom != st.session_state.get("last_processed_custom"):
+        st.session_state["last_processed_custom"] = curr_custom
+        set_active_company(curr_custom)
+        active_ticker = curr_custom
     else:
-        active_ticker = st.session_state["selected_ticker"].upper()
+        active_ticker = st.session_state["active_ticker"].upper()
 
     # Company Name Search
     with st.sidebar.expander("🔍 Search by Company Name"):
@@ -721,7 +724,7 @@ def main() -> None:
                         col_info, col_btn = st.columns([3, 1])
                         col_info.write(f"**{m['ticker']}** — {m['title'][:22]}")
                         if col_btn.button("Select", key=f"sel_{m['ticker']}"):
-                            set_active_ticker(m["ticker"])
+                            set_active_company(m["ticker"])
                             st.rerun()
                 else:
                     st.caption("No matching companies found in SEC registry.")
@@ -818,7 +821,7 @@ def main() -> None:
                     elapsed = summary.get("elapsed_time", 0.0)
                     st.success(f"✓ Analysis complete for {ticker_to_run} in {elapsed:.2f} seconds! Synchronized into Company Analyses/.")
                     load_company_dataset.clear()
-                    set_active_ticker(ticker_to_run)
+                    set_active_company(ticker_to_run)
                     time.sleep(1.0)
                     st.rerun()
                 else:
@@ -863,11 +866,11 @@ def main() -> None:
         col_ret1, col_ret2, _ = st.columns([1.5, 1.5, 4])
         with col_ret1:
             if st.button("🍎 Return to Apple Inc. (AAPL)", key="ret_aapl"):
-                set_active_ticker("AAPL")
+                set_active_company("AAPL")
                 st.rerun()
         with col_ret2:
             if st.button("🟢 Return to NVIDIA Corp (NVDA)", key="ret_nvda"):
-                set_active_ticker("NVDA")
+                set_active_company("NVDA")
                 st.rerun()
         return
 
@@ -906,11 +909,11 @@ def main() -> None:
     col_btn_aapl, col_btn_nvda, col_btn_empty = st.columns([1.3, 1.5, 4.2])
     with col_btn_aapl:
         if st.button("🍎 Apple Inc. (AAPL)", type="primary" if active_ticker == "AAPL" else "secondary", use_container_width=True, key="quick_btn_aapl"):
-            set_active_ticker("AAPL")
+            set_active_company("AAPL")
             st.rerun()
     with col_btn_nvda:
         if st.button("🟢 NVIDIA Corp (NVDA)", type="primary" if active_ticker == "NVDA" else "secondary", use_container_width=True, key="quick_btn_nvda"):
-            set_active_ticker("NVDA")
+            set_active_company("NVDA")
             st.rerun()
 
     # If dataset has not been generated yet for this valid ticker

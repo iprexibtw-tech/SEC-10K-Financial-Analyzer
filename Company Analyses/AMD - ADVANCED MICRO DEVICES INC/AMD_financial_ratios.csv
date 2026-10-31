@@ -1,0 +1,4 @@
+company_ticker,fiscal_year,period_end_date,current_ratio,debt_to_equity_ratio,total_asset_turnover,net_profit_margin_pct,current_assets_usd_m,current_liabilities_usd_m,commercial_paper_usd_m,current_debt_usd_m,long_term_debt_usd_m,total_interest_bearing_debt_usd_m,shareholders_equity_usd_m,beginning_total_assets_usd_m,ending_total_assets_usd_m,average_total_assets_usd_m,net_revenue_usd_m,net_income_usd_m,validation_status
+AMD,2023,2023-12-30,2.5068,0.0442,0.3348,3.7654,16768.0,6689.0,,751.0,1717.0,2468.0,55892.0,67580.0,67885.0,67732.5,22680.0,854.0,Verified
+AMD,2024,2024-12-28,2.6163,0.0299,0.3761,6.3642,19049.0,7281.0,,0.0,1721.0,1721.0,57568.0,67885.0,69226.0,68555.5,25785.0,1641.0,Verified
+AMD,2025,2025-12-27,2.85,0.0511,0.474,12.5148,26947.0,9455.0,,874.0,2348.0,3222.0,62999.0,69226.0,76926.0,73076.0,34639.0,4335.0,Verified

@@ -273,6 +273,44 @@ class TestStreamlitDashboard(unittest.TestCase):
         self.assertTrue(any("No existing analytical models found" in t for t in info_texts))
         self.assertTrue(any("TSLA" in t for t in info_texts))
 
+    def test_13_amd_custom_ticker_regression_workflow(self) -> None:
+        """Verify the exact user workflow (AAPL -> AMD -> NVDA -> AMD -> MSFT) without session-state exceptions."""
+        at = AppTest.from_file("streamlit_app.py", default_timeout=30)
+        at.run()
+        self.assertEqual(len(at.exception), 0)
+
+        # 1. AAPL initially loaded
+        m_aapl = {m.label: m.value for m in at.metric}
+        self.assertEqual(m_aapl.get("Annual Net Revenue"), "$416,161M")
+
+        # 2. Switch to AMD
+        at.session_state["active_ticker"] = "AMD"
+        at.run()
+        self.assertEqual(len(at.exception), 0, f"AMD transition raised: {at.exception}")
+        m_amd = {m.label: m.value for m in at.metric}
+        self.assertEqual(m_amd.get("Annual Net Revenue"), "$34,639M")
+
+        # 3. Switch to NVDA
+        at.session_state["active_ticker"] = "NVDA"
+        at.run()
+        self.assertEqual(len(at.exception), 0)
+        m_nvda = {m.label: m.value for m in at.metric}
+        self.assertEqual(m_nvda.get("Annual Net Revenue"), "$215,938M")
+
+        # 4. Return to AMD from history
+        at.session_state["active_ticker"] = "AMD"
+        at.run()
+        self.assertEqual(len(at.exception), 0)
+        m_amd2 = {m.label: m.value for m in at.metric}
+        self.assertEqual(m_amd2.get("Annual Net Revenue"), "$34,639M")
+
+        # 5. Switch to MSFT
+        at.session_state["active_ticker"] = "MSFT"
+        at.run()
+        self.assertEqual(len(at.exception), 0)
+        m_msft = {m.label: m.value for m in at.metric}
+        self.assertEqual(m_msft.get("Annual Net Revenue"), "$331,839M")
+
 
 if __name__ == "__main__":
     unittest.main()

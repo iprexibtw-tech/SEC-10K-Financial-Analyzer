@@ -1,0 +1,4 @@
+ticker,fiscal_year,source_filename,extracted_filename,extracted_file_path,word_count,start_line,end_line,end_boundary_label,status,warnings
+AMD,2025,AMD_10K_FY2025_2026-02-04.htm,AMD_2025_MDA.txt,C:\Users\kevin\Downloads\Python 10-K\data\extracted_text\AMD\AMD_2025_MDA.txt,5785,891,1191,Item 7A,Verified,None
+AMD,2024,AMD_10K_FY2024_2025-02-05.htm,AMD_2024_MDA.txt,C:\Users\kevin\Downloads\Python 10-K\data\extracted_text\AMD\AMD_2024_MDA.txt,5093,830,1079,Item 7A,Verified,None
+AMD,2023,AMD_10K_FY2023_2024-01-31.htm,AMD_2023_MDA.txt,C:\Users\kevin\Downloads\Python 10-K\data\extracted_text\AMD\AMD_2023_MDA.txt,5430,872,1108,Item 7A,Verified,None

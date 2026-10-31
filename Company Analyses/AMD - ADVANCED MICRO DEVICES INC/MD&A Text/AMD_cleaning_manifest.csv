@@ -1,0 +1,4 @@
+ticker,fiscal_year,source_mda_filename,cleaned_filename,cleaned_file_path,original_word_count,cleaned_word_count,sentiment_tokens_count,pct_change_word_count,cleaning_status,warnings
+AMD,2025,AMD_2025_MDA.txt,AMD_2025_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\AMD\AMD_2025_MDA_CLEANED.txt,5785,5785,5373,0.0,Verified (with warnings),Missing expected standard financial vocabulary: RISK.
+AMD,2024,AMD_2024_MDA.txt,AMD_2024_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\AMD\AMD_2024_MDA_CLEANED.txt,5093,5093,4716,0.0,Verified (with warnings),Missing expected standard financial vocabulary: RISK.
+AMD,2023,AMD_2023_MDA.txt,AMD_2023_MDA_CLEANED.txt,C:\Users\kevin\Downloads\Python 10-K\data\cleaned_text\AMD\AMD_2023_MDA_CLEANED.txt,5430,5430,5037,0.0,Verified (with warnings),Missing expected standard financial vocabulary: RISK.

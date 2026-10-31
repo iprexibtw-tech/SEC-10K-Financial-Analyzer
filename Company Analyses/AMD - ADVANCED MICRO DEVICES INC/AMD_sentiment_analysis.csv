@@ -1,0 +1,4 @@
+company_ticker,fiscal_reporting_year,fiscal_period_end_date,source_mda_filename,total_word_count,positive_word_count,negative_word_count,uncertainty_word_count,litigious_word_count,strong_modal_word_count,weak_modal_word_count,constraining_word_count,pn_ratio,positive_word_frequency,negative_word_frequency,dictionary_version,processing_status
+AMD,2023,2023-12-30,AMD_2023_MDA.txt,5037,33,37,52,16,15,12,31,0.8919,0.66%,0.73%,Loughran-McDonald Master Dictionary (1993-2025),Verified
+AMD,2024,2024-12-28,AMD_2024_MDA.txt,4716,32,40,49,18,16,12,29,0.8000,0.68%,0.85%,Loughran-McDonald Master Dictionary (1993-2025),Verified
+AMD,2025,2025-12-27,AMD_2025_MDA.txt,5373,28,39,73,21,16,16,35,0.7179,0.52%,0.73%,Loughran-McDonald Master Dictionary (1993-2025),Verified
