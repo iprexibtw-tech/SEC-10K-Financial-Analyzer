@@ -3088,6 +3088,42 @@ Please inspect and fix the following:
    - Verified local server running on port 8501: HTTP 200 OK.
    - Successfully committed and pushed changes to remote repository (`origin/main`).
 
+---
+
+### Prompt 23: Fix Streamlit Custom Ticker Session-State Widget Modification Error
+
+#### Prompt Text:
+```text
+BUG FIX — STREAMLIT CUSTOM TICKER SESSION STATE
+
+My deployed Streamlit application successfully completed an AMD custom ticker analysis, reporting 8/8 processing stages in 14.34 seconds.
+
+However, immediately after completion, the application displayed this error:
+st.session_state['custom_ticker_input'] cannot be modified after the widget with that key is instantiated.
+
+Please fix this specific Streamlit session-state issue without rebuilding the application or changing the underlying financial analysis pipeline.
+```
+
+#### Implementation Actions & Verification for Prompt 23:
+1. **Identified Post-Instantiation Widget Key Modification**:
+   - Located the fatal assignment inside `set_active_ticker()`: `st.session_state["custom_ticker_input"] = clean`.
+   - Identified that calling this assignment after analysis completion (or on button clicks) violated Streamlit's rule disallowing widget state mutation after widget instantiation.
+
+2. **State-Management Architecture Overhaul**:
+   - Established `st.session_state["active_ticker"]` as the sole authority governing active company presentation and dataset loading.
+   - Created `set_active_company()` which updates `active_ticker`, `selected_ticker`, and `current_ticker` while strictly never touching `custom_ticker_input`.
+   - Streamlined the History selectbox to dynamically compute its `index` from `active_ticker` without binding a widget key that could cause state locks.
+   - Maintained user input inside `custom_ticker_input` without clearing.
+
+3. **Output Preservation**:
+   - Preserved verified models and raw outputs for Apple (AAPL), NVIDIA (NVDA), and Advanced Micro Devices (AMD) in `Company Analyses/`.
+
+4. **Testing and Verification**:
+   - Executed the complete user regression workflow: AAPL ➔ AMD (analyzed in 3.71s, $34,639M rev, 2.85x CR, 0.7179 P/N) ➔ NVDA ($215,938M rev) ➔ AMD ($34,639M rev reloaded without reprocessing) ➔ MSFT ($331,839M rev) with 100% success and zero session-state exceptions.
+   - Expanded `test_streamlit.py` to 13 automated tests including `test_13_amd_custom_ticker_regression_workflow` (100% passing in 4.13s).
+   - Committed and pushed changes to GitHub `origin/main`.
+
+
 
 
 
